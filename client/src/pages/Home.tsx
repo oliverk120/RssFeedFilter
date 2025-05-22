@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FeedInputForm from "@/components/FeedInputForm";
 import FeedStatus from "@/components/FeedStatus";
 import FeedItemsList from "@/components/FeedItemsList";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { FeedItem, FeedStatusType } from "@/lib/types";
@@ -13,21 +13,7 @@ export default function Home() {
   const [filterKeywords, setFilterKeywords] = useState<string>("");
   const [status, setStatus] = useState<FeedStatusType>("initial");
   const [errorMessage, setErrorMessage] = useState<string>("");
-
-  // Query for filtered feed items
-  const {
-    data: feedItems = [],
-    refetch,
-    isLoading,
-    isError,
-    error
-  } = useQuery<FeedItem[]>({
-    queryKey: ["/api/feed", rssUrl, filterKeywords],
-    enabled: false,
-    onError: (err: Error) => {
-      setErrorMessage(err.message);
-    }
-  });
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
 
   // Mutation to fetch the feed
   const fetchFeedMutation = useMutation({
@@ -40,8 +26,8 @@ export default function Home() {
       const res = await apiRequest("GET", `/api/feed?${params.toString()}`);
       return res.json();
     },
-    onSuccess: () => {
-      refetch();
+    onSuccess: (data) => {
+      setFeedItems(data);
       setStatus("success");
     },
     onError: (err: Error) => {
@@ -78,15 +64,16 @@ export default function Home() {
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterKeywords(e.target.value);
     if (status === "success") {
-      refetch();
+      // Need to re-fetch with the new filter keywords
+      handleFetchFeed();
     }
   };
 
   // Determine the current status to display
   let currentStatus = status;
-  if (isLoading || fetchFeedMutation.isPending) {
+  if (fetchFeedMutation.isPending) {
     currentStatus = "loading";
-  } else if (isError) {
+  } else if (fetchFeedMutation.isError) {
     currentStatus = "error";
   } else if (status === "success" && feedItems.length === 0) {
     currentStatus = "empty";
