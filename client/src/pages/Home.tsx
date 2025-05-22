@@ -24,6 +24,9 @@ export default function Home() {
   } = useQuery<FeedItem[]>({
     queryKey: ["/api/feed", rssUrl, filterKeywords],
     enabled: false,
+    onError: (err: Error) => {
+      setErrorMessage(err.message);
+    }
   });
 
   // Mutation to fetch the feed
@@ -85,7 +88,6 @@ export default function Home() {
     currentStatus = "loading";
   } else if (isError) {
     currentStatus = "error";
-    setErrorMessage((error as Error).message);
   } else if (status === "success" && feedItems.length === 0) {
     currentStatus = "empty";
   }
