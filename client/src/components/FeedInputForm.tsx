@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 interface FeedInputFormProps {
   rssUrl: string;
   filterKeywords: string;
+  limit: number;
   onRssUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFilterChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onLimitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFetchFeed: () => void;
   isLoading: boolean;
 }
@@ -13,8 +15,10 @@ interface FeedInputFormProps {
 export default function FeedInputForm({
   rssUrl,
   filterKeywords,
+  limit,
   onRssUrlChange,
   onFilterChange,
+  onLimitChange,
   onFetchFeed,
   isLoading
 }: FeedInputFormProps) {
@@ -60,6 +64,23 @@ export default function FeedInputForm({
           />
         </div>
         <p className="mt-2 text-xs text-gray-500">Enter comma-separated keywords to filter the feed</p>
+      </div>
+
+      <div className="mb-6">
+        <label htmlFor="limit" className="block text-sm font-medium text-gray-700 mb-1">
+          Items Limit
+        </label>
+        <div className="mt-1">
+          <Input
+            type="number"
+            id="limit"
+            className="block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            value={limit}
+            onChange={onLimitChange}
+            min={1}
+          />
+        </div>
+        <p className="mt-2 text-xs text-gray-500">Number of items to fetch from the feed</p>
       </div>
     </div>
   );
