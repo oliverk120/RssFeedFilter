@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import FeedInputForm from "@/components/FeedInputForm";
 import FeedStatus from "@/components/FeedStatus";
 import FeedItemsList from "@/components/FeedItemsList";
+import FeedJsonDisplay from "@/components/FeedJsonDisplay";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ export default function Home() {
   const [status, setStatus] = useState<FeedStatusType>("initial");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [limit, setLimit] = useState<number>(1);
 
   // Mutation to fetch the feed
   const fetchFeedMutation = useMutation({
@@ -22,6 +24,7 @@ export default function Home() {
       const params = new URLSearchParams({
         url: rssUrl,
         keywords: filterKeywords,
+        limit: limit.toString(),
       });
       const res = await apiRequest("GET", `/api/feed?${params.toString()}`);
       return res.json();
@@ -69,6 +72,12 @@ export default function Home() {
     }
   };
 
+  // Handle limit change
+  const handleLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setLimit(isNaN(value) ? 1 : Math.max(value, 1));
+  };
+
   // Determine the current status to display
   let currentStatus = status;
   if (fetchFeedMutation.isPending) {
@@ -90,8 +99,10 @@ export default function Home() {
         <FeedInputForm
           rssUrl={rssUrl}
           filterKeywords={filterKeywords}
+          limit={limit}
           onRssUrlChange={handleRssUrlChange}
           onFilterChange={handleFilterChange}
+          onLimitChange={handleLimitChange}
           onFetchFeed={handleFetchFeed}
           isLoading={fetchFeedMutation.isPending}
         />
@@ -103,10 +114,14 @@ export default function Home() {
           filterKeywords={filterKeywords}
         />
 
-        <FeedItemsList 
-          items={feedItems} 
+        <FeedItemsList
+          items={feedItems}
           filterKeywords={filterKeywords.split(',').map(kw => kw.trim()).filter(Boolean)}
         />
+
+        <div className="mt-6">
+          <FeedJsonDisplay items={feedItems} />
+        </div>
 
         <footer className="mt-12 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
           <p>RSS Feed Filter App &copy; {new Date().getFullYear()}</p>

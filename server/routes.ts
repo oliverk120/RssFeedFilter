@@ -19,6 +19,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const url = req.query.url as string;
       const keywords = req.query.keywords as string;
+      const limitParam = parseInt(req.query.limit as string);
+      const limit = Number.isNaN(limitParam) ? undefined : Math.max(limitParam, 0);
 
       if (!url) {
         return res.status(400).json({ message: "RSS feed URL is required" });
@@ -53,6 +55,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return keywordsList.some(keyword => itemText.includes(keyword));
           });
         }
+      }
+
+      // Apply limit if provided
+      if (typeof limit === 'number' && limit > 0) {
+        filteredItems = filteredItems.slice(0, limit);
       }
 
       // Store items in memory for future reference (optional)
